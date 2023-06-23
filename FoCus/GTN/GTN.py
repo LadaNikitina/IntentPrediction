@@ -24,23 +24,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-
-# In[2]:
-
-
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"]="0,1"
 print(torch.cuda.device_count())
 
-
-# In[3]:
-
-
-sys.path.insert(1, '/cephfs/home/ledneva/focus/utils/')
-
-
-# In[4]:
-
+sys.path.insert(1, '/focus/utils/') # set the correct path to utils dir
 
 from data_function import get_data
 from functions_GTN import preprocessing
@@ -52,14 +40,10 @@ from tqdm import tqdm
 
 num_iterations = 3
 
+file = open("GTN.txt", "w")
 
-file = open("GTN_distilroberta_30.txt", "w")
-
-first_num_clusters = 200
-second_num_clusters = 30
-
-
-    # In[9]:
+first_num_clusters = 200 # set the number of clusters
+second_num_clusters = 30 # set the number of clusters
 
 for iteration in range(num_iterations):
     print(f"Iteration number {iteration}")
@@ -69,27 +53,15 @@ for iteration in range(num_iterations):
     clusters.form_clusters()
 
     device = torch.device('cuda')
-
-
-    # In[11]:
-
-
+    
     top_k = 5
     batch_size = 128
     embs_dim = len(clusters.user_cluster_embs[0])
-
-
-    # In[12]:
-
 
     null_cluster_emb = np.zeros(embs_dim)
     fake_cluster_emb = np.zeros(embs_dim)
 
     embs = np.concatenate([clusters.user_cluster_embs, clusters.system_cluster_embs, [null_cluster_emb, fake_cluster_emb]])
-
-
-    # In[13]:
-
 
     user_train_x, user_train_y, user_train_embs, sys_train_x, sys_train_y, sys_train_embs = get_data(clusters.train_dataset, top_k, 
                                                         second_num_clusters, 
@@ -110,10 +82,6 @@ for iteration in range(num_iterations):
                                                         clusters.valid_user_embs,
                                                         clusters.valid_system_embs)
 
-
-    # In[14]:
-
-
     user_train_matrices, user_train_node_embs, user_train_labels = preprocessing(user_train_x, 
                                                                                  user_train_y, 
                                                                                  batch_size,
@@ -121,20 +89,12 @@ for iteration in range(num_iterations):
                                                                                  user_train_embs, 
                                                                                  second_num_clusters, 1)
 
-
-    # In[15]:
-
-
     sys_train_matrices, sys_train_node_embs, sys_train_labels = preprocessing(sys_train_x, 
                                                                               sys_train_y, 
                                                                               batch_size,
                                                                               top_k, embs,
                                                                               sys_train_embs,
                                                                               second_num_clusters, 1)
-
-
-    # In[16]:
-
 
     user_test_matrices, user_test_node_embs, user_test_labels = preprocessing(user_test_x, 
                                                                               user_test_y, 
@@ -149,10 +109,6 @@ for iteration in range(num_iterations):
                                                                            sys_test_embs,
                                                                            second_num_clusters, 0)
 
-
-    # In[17]:
-
-
     user_valid_matrices, user_valid_node_embs, user_valid_labels = preprocessing(user_valid_x, 
                                                                                 user_valid_y, 
                                                                                 batch_size,
@@ -165,12 +121,6 @@ for iteration in range(num_iterations):
                                                                              top_k, embs,
                                                                              sys_valid_embs,
                                                                              second_num_clusters, 1)
-
-
-    # ## User model
-
-    # In[18]:
-
 
     class user_GTN_arguments():
         epoch = 100
@@ -188,16 +138,8 @@ for iteration in range(num_iterations):
         num_FastGTN_layers = 2
         top_k = 5
 
-
-    # In[19]:
-
-
     user_args = user_GTN_arguments()
     user_args.num_nodes = user_train_node_embs[0].shape[0]
-
-
-    # In[20]:
-
 
     user_model = FastGTNs(num_edge_type = 4,
                     w_in = user_train_node_embs[0].shape[1],
@@ -208,18 +150,10 @@ for iteration in range(num_iterations):
     user_model.to(device)
     user_loss = nn.CrossEntropyLoss()
 
-
-    # In[21]:
-
-
     from torch.optim.lr_scheduler import ReduceLROnPlateau
     user_optimizer = torch.optim.Adam(user_model.parameters(), lr = user_args.lr)
     user_lr_scheduler = LRScheduler(user_optimizer)
     user_early_stopping = EarlyStopping()
-
-
-    # In[22]:
-
 
     train_num_batches = len(user_train_matrices)
     valid_num_batches = len(user_valid_matrices)
@@ -278,11 +212,7 @@ for iteration in range(num_iterations):
 
         if user_early_stopping.early_stop:
             break
-
-
-    # In[23]:
-
-
+            
     user_model.eval()
     test_num_batches = len(user_test_matrices)
     user_true = []
@@ -302,21 +232,12 @@ for iteration in range(num_iterations):
                 user_test += y_test.tolist()
                 user_true += y_true.tolist()
 
-
-    # In[24]:
-
-
     file.write("USER metric\n")
 
     file.write(f"Acc@1: {get_accuracy_k(1, clusters.test_user_df, user_test, clusters.test_dataset, 0)}\n")
     file.write(f"Acc@3: {get_accuracy_k(3, clusters.test_user_df, user_test, clusters.test_dataset, 0)}\n")
     file.write(f"Acc@5: {get_accuracy_k(5, clusters.test_user_df, user_test, clusters.test_dataset, 0)}\n")
     file.write(f"Acc@10: {get_accuracy_k(10, clusters.test_user_df, user_test, clusters.test_dataset, 0)}\n")
-
-    # ## System model
-
-    # In[25]:
-
 
     class sys_GTN_arguments():
         epoch = 100
@@ -334,16 +255,8 @@ for iteration in range(num_iterations):
         num_FastGTN_layers = 2
         top_k = 5
 
-
-    # In[26]:
-
-
     sys_args = sys_GTN_arguments()
     sys_args.num_nodes = sys_train_node_embs[0].shape[0]
-
-
-    # In[27]:
-
 
     sys_model = FastGTNs(num_edge_type = 4,
                     w_in = sys_train_node_embs[0].shape[1],
@@ -357,10 +270,6 @@ for iteration in range(num_iterations):
 
     sys_model.cuda()
     sys_loss = nn.CrossEntropyLoss()
-
-
-    # In[28]:
-
 
     train_num_batches = len(sys_train_matrices)
     valid_num_batches = len(sys_valid_matrices)
@@ -382,7 +291,6 @@ for iteration in range(num_iterations):
                 train_loss = sys_loss(y_train[y_true != -1], y_true[y_true != -1])
             else:
                 train_loss = sys_loss(y_train, y_true)
-            # тут считать лосс, выкинуть фейки
 
             train_loss.backward()
             sys_optimizer.step()
@@ -403,7 +311,6 @@ for iteration in range(num_iterations):
                 else:
                     valid_loss = sys_loss(y_valid, y_true)
 
-                # тут считать лосс, выкинуть фейки
                 valid_epoch_loss += valid_loss.detach().item()
 
             valid_epoch_loss /= valid_num_batches
@@ -419,10 +326,6 @@ for iteration in range(num_iterations):
 
         if sys_early_stopping.early_stop:
             break
-
-
-    # In[ ]:
-
 
     sys_model.eval()
     test_num_batches = len(sys_test_matrices)
@@ -443,19 +346,12 @@ for iteration in range(num_iterations):
                 sys_test += y_test.tolist()
                 sys_true += y_true.tolist()
 
-
-    # In[ ]:
-
     file.write("SYSTEM metric\n")
 
     file.write(f"Acc@1: {get_accuracy_k(1, clusters.test_system_df, sys_test, clusters.test_dataset, 1)}\n")
     file.write(f"Acc@3: {get_accuracy_k(3, clusters.test_system_df, sys_test, clusters.test_dataset, 1)}\n")
     file.write(f"Acc@5: {get_accuracy_k(5, clusters.test_system_df, sys_test, clusters.test_dataset, 1)}\n")
     file.write(f"Acc@10: {get_accuracy_k(10, clusters.test_system_df, sys_test, clusters.test_dataset, 1)}\n")
-
-
-    # In[33]:
-
 
     file.write("ALL metric\n")
     file.write(f"Acc@1: {get_all_accuracy_k(1, clusters.test_user_df, clusters.test_system_df, user_test, sys_test, clusters.test_dataset)}\n")
