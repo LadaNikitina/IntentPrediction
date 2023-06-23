@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[7]:
-
-
 from datasets import load_dataset
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
@@ -37,17 +31,17 @@ os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"]="0"
 print(torch.cuda.device_count())
 
-first_num_clusters = 200
-second_num_clusters = 30
+first_num_clusters = 200 # set the number of clusters
+second_num_clusters = 30  # set the number of clusters
 
 import sys
-sys.path.insert(1, '/cephfs/home/ledneva/focus/utils/')
+sys.path.insert(1, '/focus/utils/') # set the correct path to the FoCus utils dir
 
 from preprocess import Clusters, get_accuracy_k, get_all_accuracy_k
 
 num_iterations = 3
 
-file = open("ConveRT_distilroberta_30.txt", "w")
+file = open("ConveRT.txt", "w")
 
 sentence_encoder = SentenceEncoder(multiple_contexts=True)
 
@@ -69,10 +63,11 @@ for iteration in range(num_iterations):
     top_k = 5
 
     train_user_embeddings = np.concatenate([sentence_encoder.encode_responses(train_user_utterances)
-                                for train_user_utterances in tqdm(batches_train_user_utterances)])
+                                            for train_user_utterances in tqdm(batches_train_user_utterances)])
 
 
-    train_system_embeddings = np.concatenate([sentence_encoder.encode_responses(train_system_utterances) for train_system_utterances in tqdm(batches_train_system_utterances)])
+    train_system_embeddings = np.concatenate([sentence_encoder.encode_responses(train_system_utterances) 
+                                             for train_system_utterances in tqdm(batches_train_system_utterances)])
 
     user_metric = {1 : [], 3 : [], 5 : [], 10 : []}
     system_metric = {1 : [], 3 : [], 5 : [], 10 : []}
@@ -145,10 +140,6 @@ for iteration in range(num_iterations):
             user_metric[k].append(np.mean(user_utterence_metric[k])) 
             system_metric[k].append(np.mean(system_utterence_metric[k])) 
 
-
-    # In[23]:
-
-
     file.write("USER METRIC\n")
 
     for k in [1, 3, 5, 10]:
@@ -163,10 +154,3 @@ for iteration in range(num_iterations):
 
     for k in [1, 3, 5, 10]:
         file.write(f"Acc@{k}: {(np.mean(system_metric[k]) + np.mean(user_metric[k])) / 2}\n")
-
-
-    # In[ ]:
-
-
-
-
