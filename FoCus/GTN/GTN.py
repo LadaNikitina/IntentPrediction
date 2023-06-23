@@ -258,7 +258,7 @@ for iteration in range(num_iterations):
 
     sys_model = FastGTNs(num_edge_type = 4,
                     w_in = sys_train_node_embs[0].shape[1],
-                    num_class=second_num_clusters, # разобраться что с фейками
+                    num_class=second_num_clusters,
                     num_nodes = sys_train_node_embs[0].shape[0],
                     args = sys_args)
 
