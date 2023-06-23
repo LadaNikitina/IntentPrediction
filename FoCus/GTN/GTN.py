@@ -175,7 +175,6 @@ for iteration in range(num_iterations):
                 train_loss = user_loss(y_train[y_true != -1], y_true[y_true != -1])
             else:
                 train_loss = user_loss(y_train, y_true)
-            # тут считать лосс, выкинуть фейки
 
             train_loss.backward()
             user_optimizer.step()
@@ -196,7 +195,6 @@ for iteration in range(num_iterations):
                 else:
                     valid_loss = user_loss(y_valid, y_true)
 
-                # тут считать лосс, выкинуть фейки
                 valid_epoch_loss += valid_loss.detach().item()
 
             valid_epoch_loss /= valid_num_batches
