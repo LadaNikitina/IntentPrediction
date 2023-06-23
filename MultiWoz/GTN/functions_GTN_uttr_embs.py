@@ -69,7 +69,6 @@ def preprocessing(x, y, batch_size, top_k, embs, uttr_embs, num_clusters, shuffl
         num_nodes = edges[0].shape[0]
         adjacency_matrix = []
         
-        # https://github.com/seongjunyun/Graph_Transformer_Networks/blob/master/main.py
         for i, edge in enumerate(edges):
             # for fastGTN and sparse matrices multiplication
             edge_tmp = torch.from_numpy(np.vstack((edge.nonzero()[1], \
