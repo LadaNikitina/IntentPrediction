@@ -12,7 +12,7 @@ import sys
 import os
 
 from wooden_functions import get_features, get_data
-sys.path.insert(1, '/cephfs/home/ledneva/focus/utils/')
+sys.path.insert(1, '/focus/utils/') # set the correct path to the dir
 from preprocess import Clusters, get_accuracy_k, get_all_accuracy_k
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
@@ -20,15 +20,14 @@ os.environ["CUDA_VISIBLE_DEVICES"]="1,3,4"
 print(torch.cuda.device_count())
 
 num_iterations = 3
-# In[ ]:
 
-file = open("Wooden_distilroberta_30.txt", "w")
+file = open("CatBoost.txt", "w")
 
 for iteration in range(num_iterations):
     print(f"Iteration number {iteration}")
     file.write(f"Iteration number {iteration}\n\n")
 
-    first_num_clusters = 200
+    first_num_clusters = 200 # set the number of clusters
     second_num_clusters = 30
 
     clusters = Clusters(first_num_clusters, second_num_clusters)
@@ -46,10 +45,6 @@ for iteration in range(num_iterations):
                                                     near_number, 
                                                     num_coords,
                                                     second_num_clusters)
-
-
-    # In[ ]:
-
 
     user_train_X, user_train_y, system_train_X, system_train_y = get_data(user_features, 
                                                                           system_features, 
@@ -87,32 +82,15 @@ for iteration in range(num_iterations):
     user_classif = CatBoostClassifier(iterations = 500, learning_rate = 0.1, random_seed = 43, loss_function = 'MultiClass', task_type = 'GPU')
     user_classif.fit(user_train_X, user_train_y, eval_set = [(user_valid_X, user_valid_y)], verbose = 10)
 
-
-    # In[ ]:
-
-
     system_classif = CatBoostClassifier(iterations = 500, learning_rate = 0.1, random_seed = 43, loss_function = 'MultiClass', task_type = 'GPU')
     system_classif.fit(system_train_X, system_train_y, eval_set = [(system_test_X, system_test_y)], verbose = 10)
 
-
-    # In[ ]:
-
-
     test_user_pred = user_classif.predict_proba(user_test_X)
     test_sys_pred = system_classif.predict_proba(system_test_X)
-
-
-    # In[ ]:
-
-
+    
     test_user_true = user_test_y['target'].tolist()
     test_sys_true = system_test_y['target'].tolist()
 
-
-    # In[ ]:
-
-
-    # id_one_hot + major_intent_id_one_hot, 10, catboost
     file.write("USER metric\n")
 
     file.write(f"Acc@1: {get_accuracy_k(1, clusters.test_user_df, test_user_pred, clusters.test_dataset, 0)}\n")
@@ -120,20 +98,12 @@ for iteration in range(num_iterations):
     file.write(f"Acc@5: {get_accuracy_k(5, clusters.test_user_df, test_user_pred, clusters.test_dataset, 0)}\n")
     file.write(f"Acc@10: {get_accuracy_k(10, clusters.test_user_df, test_user_pred, clusters.test_dataset, 0)}\n")
 
-
-    # In[23]:
-
-
-    # id_one_hot + major_intent_id_one_hot, 10, catboost
     file.write("SYSTEM metric\n")
 
     file.write(f"Acc@1: {get_accuracy_k(1, clusters.test_system_df, test_sys_pred, clusters.test_dataset, 1)}\n")
     file.write(f"Acc@3: {get_accuracy_k(3, clusters.test_system_df, test_sys_pred, clusters.test_dataset, 1)}\n")
     file.write(f"Acc@5: {get_accuracy_k(5, clusters.test_system_df, test_sys_pred, clusters.test_dataset, 1)}\n")
     file.write(f"Acc@10: {get_accuracy_k(10, clusters.test_system_df, test_sys_pred, clusters.test_dataset, 1)}\n")
-
-
-    # In[27]:
 
     file.write("ALL metric\n")
 
@@ -150,5 +120,3 @@ for iteration in range(num_iterations):
     del user_classif, system_classif
     
     torch.cuda.empty_cache()
-
-
