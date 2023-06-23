@@ -26,55 +26,32 @@ import torch.nn.functional as F
 import dgl.nn.pytorch as dglnn
 import torch.nn as nn
 
-sys.path.insert(1, '/cephfs/home/ledneva/multiwoz/common_utils/')
+sys.path.insert(1, '/multiwoz/utils/') # set the correct path to the utils dir
 from preprocess import Clusters, get_accuracy_k, get_all_accuracy_k
 
 num_iterations = 3
-
-# In[2]:
-
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"]="5,6"
 print(torch.cuda.device_count())
 
-
-# In[3]:
-
-
-# In[4]:
-
-
 from data_function_uttr_embs import get_data
 from GAT_functions_uttr_embs import get_data_dgl_no_cycles
 from early_stopping_tools import LRScheduler, EarlyStopping
 
-
-
-first_num_clusters = 200
+first_num_clusters = 200 # set the number of clusters
 second_num_clusters = 30
 
-
-# In[6]:
-
-
-embs_path = "/cephfs/home/ledneva/multiwoz/distilroberta_embeddings.csv"
-clusters = Clusters(first_num_clusters, second_num_clusters, embs_path)
-clusters.form_clusters()
-
-
-# In[5]:
-
-file = open("MP_noise_30.txt", "w")
+file = open("MP.txt", "w")
 
 for iteration in range(num_iterations):
+    embs_path = "/multiwoz/distilroberta_embeddings.csv" # set the correct path to embeddings
+    clusters = Clusters(first_num_clusters, second_num_clusters, embs_path)
+    clusters.form_clusters()
+    
     print(f"Iteration number {iteration}")
     file.write(f"Iteration number {iteration}\n\n")
 
-    # In[9]:
-
-
-    # counting unique intents
     unique_intent = []
 
     for intents in clusters.user_train_df['intent']:
@@ -110,30 +87,9 @@ for iteration in range(num_iterations):
             intent_count[j] = intents.count(intent)
         all_intents.append(np.array(intent_count) / sum(intent_count))
 
-
-    # ## 4.3 Functions
-
-    # Functions generating butches for two types of graphs and metric function
-
-    # In[10]:
-
-
     device = torch.device('cuda:0')
-
-
-    # In[11]:
-
-
     top_k = 15
     batch_size = 128
-
-
-    # ## 4.4 Preprocessing data
-
-    # Data generation and preparation
-
-    # In[12]:
-
 
     user_train_x, user_train_y, sys_train_x, sys_train_y = get_data(clusters.train_dataset, 
                                                                     top_k, second_num_clusters, 
@@ -154,118 +110,44 @@ for iteration in range(num_iterations):
                                                                     np.array(clusters.valid_user_embs),
                                                                     np.array(clusters.valid_system_embs))
 
-
-    # In[13]:
-
-
     user_train_data = get_data_dgl_no_cycles(user_train_x, user_train_y, 1, top_k, batch_size)
-
-
-    # In[14]:
-
-
     sys_train_data = get_data_dgl_no_cycles(sys_train_x, sys_train_y, 1, top_k, batch_size)
-
-
-    # In[15]:
-
-
     user_test_data = get_data_dgl_no_cycles(user_test_x, user_test_y, 0, top_k, batch_size)
-
-
-    # In[16]:
-
-
     sys_test_data = get_data_dgl_no_cycles(sys_test_x, sys_test_y, 0, top_k, batch_size)
-
-
-    # In[17]:
-
-
     user_valid_data = get_data_dgl_no_cycles(user_valid_x, user_valid_y, 1, top_k, batch_size)
-
-
-    # In[18]:
-
-
     sys_valid_data = get_data_dgl_no_cycles(sys_valid_x, sys_valid_y, 1, top_k, batch_size)
 
-
-    # In[19]:
-
-
-    # обучаемые веса для суммирования
     linear_weights = np.zeros(top_k)
     linear_weights[...] = 1 / top_k
     linear_weights = torch.tensor(linear_weights).view(1, -1)
     linear_weights = linear_weights.to(device)
-
-
-    # In[20]:
-
-
     intent_embs_dim = len(all_intents[0])
     centre_embs_dim = len(clusters.user_cluster_embs[0])
 
-
-    # In[21]:
-
-
     num_comps = 512
-
-
-    # In[22]:
-
 
     learn_embs_dim = num_comps
     learn_emb = nn.Parameter(
                 torch.Tensor(2 * second_num_clusters + 1, learn_embs_dim), requires_grad=False
     )
     learn_emb = torch.Tensor(nn.init.xavier_uniform_(learn_emb))
-    # обучаемый эмбеддинг
     # weights = torch.Tensor(emb)
-
-
-    # In[23]:
-
 
     null_cluster_centre_emb = np.zeros(centre_embs_dim)
     null_cluster_intent_emb = np.zeros(intent_embs_dim)
-
-
-    # In[24]:
-
 
     centre_mass = torch.Tensor(np.concatenate([clusters.user_cluster_embs, 
                                                clusters.system_cluster_embs, 
                                                [null_cluster_centre_emb]])).to(device)
 
-
-    # In[25]:
-
-
     intent_embs = torch.Tensor(np.concatenate([all_intents, [null_cluster_intent_emb]])).to(device)
-
-
-    # In[26]:
-
 
     # user_cluster_intents, system_cluster_intents - intents
     # clusters.user_cluster_embs, clusters.system_cluster_embs - center of mass
 
-
-    # ## 4.5 Prediction of user clusters
-
-    # In[27]:
-
-
     hidden_dim = 512
     embs_dim = 768
     num_heads = 2
-
-
-    # In[28]:
-
 
     from dgl import nn as dgl_nn
     from torch import nn
@@ -312,10 +194,6 @@ for iteration in range(num_iterations):
             h = list(map(get_sum, h))
             hg = torch.stack(h)
             return self.classify(hg)   
-
-
-    # In[30]:
-
 
     user_model = GAT_user(hidden_dim, num_heads).to(device)
     user_train_epoch_losses = []
@@ -364,10 +242,6 @@ for iteration in range(num_iterations):
         if early_stopping.early_stop:
             break
 
-
-    # In[31]:
-
-
     import matplotlib.pyplot as plt
 
     plt.figure(figsize=(12, 6))
@@ -375,10 +249,6 @@ for iteration in range(num_iterations):
     plt.plot(user_train_epoch_losses, label = "train")
     plt.plot(user_valid_epoch_losses, label = "valid")
     plt.legend()
-
-
-    # In[32]:
-
 
     user_model.eval()
     user_test_X, user_test_Y = map(list, zip(*user_test_data))
@@ -394,21 +264,12 @@ for iteration in range(num_iterations):
         user_probs_Y = torch.softmax(user_model(g), 1).tolist()
         user_probs += user_probs_Y
 
-
-    # In[33]:
-
-
     file.write("USER metric\n")
 
     file.write(f"Acc@1: {get_accuracy_k(1, clusters.test_user_df, user_probs, clusters.test_dataset, 0)}\n")
     file.write(f"Acc@3: {get_accuracy_k(3, clusters.test_user_df, user_probs, clusters.test_dataset, 0)}\n")
     file.write(f"Acc@5: {get_accuracy_k(5, clusters.test_user_df, user_probs, clusters.test_dataset, 0)}\n")
     file.write(f"Acc@10: {get_accuracy_k(10, clusters.test_user_df, user_probs, clusters.test_dataset, 0)}\n")
-
-
-    # ## 4.6 Prediction of system clusters
-
-    # In[36]:
 
     from dgl import nn as dgl_nn
     from torch import nn
@@ -456,10 +317,6 @@ for iteration in range(num_iterations):
             hg = torch.stack(h)
             return self.classify(hg)   
 
-
-    # In[37]:
-
-
     system_model = GAT_system(hidden_dim, num_heads).to(device)
 
     for param in system_model.parameters():
@@ -505,10 +362,6 @@ for iteration in range(num_iterations):
         if early_stopping.early_stop:
             break
 
-
-    # In[38]:
-
-
     system_model.eval()
     system_test_X, system_test_Y = map(list, zip(*sys_test_data))
 
@@ -523,10 +376,6 @@ for iteration in range(num_iterations):
         system_probs_Y = torch.softmax(system_model(g), 1).tolist()
         system_probs += system_probs_Y
 
-
-    # In[39]:
-
-
     file.write("SYSTEM metric\n")
 
     file.write(f"Acc@1: {get_accuracy_k(1, clusters.test_system_df, system_probs, clusters.test_dataset, 1)}\n")
@@ -534,20 +383,12 @@ for iteration in range(num_iterations):
     file.write(f"Acc@5: {get_accuracy_k(5, clusters.test_system_df, system_probs, clusters.test_dataset, 1)}\n")
     file.write(f"Acc@10: {get_accuracy_k(10, clusters.test_system_df, system_probs, clusters.test_dataset, 1)}\n")
 
-
-    # In[33]:
-
-
     file.write("ALL metric\n")
     file.write(f"Acc@1: {get_all_accuracy_k(1, clusters.test_user_df, clusters.test_system_df, user_probs, system_probs, clusters.test_dataset)}\n")
     file.write(f"Acc@3: {get_all_accuracy_k(3, clusters.test_user_df, clusters.test_system_df, user_probs, system_probs, clusters.test_dataset)}\n")
     file.write(f"Acc@5: {get_all_accuracy_k(5, clusters.test_user_df, clusters.test_system_df, user_probs, system_probs, clusters.test_dataset)}\n")
     file.write(f"Acc@10: {get_all_accuracy_k(10, clusters.test_user_df, clusters.test_system_df, user_probs, system_probs, clusters.test_dataset)}\n")
 
-
-    # In[ ]:
-#     del clusters
-    
     del user_train_x, user_train_y, sys_train_x, sys_train_y
     del user_test_x, user_test_y, sys_test_x, sys_test_y
     del user_valid_x, user_valid_y, sys_valid_x, sys_valid_y
