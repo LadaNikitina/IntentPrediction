@@ -25,15 +25,13 @@ os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"]="1,2"
 print(torch.cuda.device_count())
 
-first_num_clusters = 200
+first_num_clusters = 200 # set the correct number of clusters
 second_num_clusters = 30
-
 
 num_iterations = 3
 
-
 import sys
-sys.path.insert(1, '/cephfs/home/ledneva/multiwoz/common_utils/')
+sys.path.insert(1, '/multiwoz/utils/') # set the correct path to the utils dir
 from preprocess import Clusters, get_accuracy_k, get_all_accuracy_k
 
 file = open("ConveRT_MAP_30.txt", "w")
@@ -41,7 +39,7 @@ file = open("ConveRT_MAP_30.txt", "w")
 for i in range(num_iterations):
     print(f"Iteration number {i}")
 
-    path = "/cephfs/home/ledneva/multiwoz/distilroberta_embeddings.csv"
+    path = "/multiwoz/distilroberta_embeddings.csv" # set the correct path to the preprocessed embeddings
     clusters = Clusters(first_num_clusters, second_num_clusters, path)
     clusters.form_clusters()
 
@@ -61,7 +59,6 @@ for i in range(num_iterations):
     import tensorflow as tf
     import numpy as np
     from tqdm import tqdm
-
 
     nocontext_model = "https://github.com/davidalami/ConveRT/releases/download/1.0/nocontext_tf_model.tar.gz"
     multicontext_model = "https://github.com/davidalami/ConveRT/releases/download/1.0/multicontext_tf_model.tar"
@@ -189,10 +186,6 @@ for i in range(num_iterations):
     valid_system_embeddings = np.concatenate([sentence_encoder.encode_responses(valid_system_utterances)
                                               for valid_system_utterances in tqdm(batches_valid_system_utterances)])
 
-
-    # In[7]:
-
-
     def get_data(dataset, user_embs, system_embs):
         ''' create pairs context-response '''
         num_negative = 5
@@ -230,7 +223,6 @@ for i in range(num_iterations):
         batch_size = context_emb.shape[0]
         negative_context_samples = []
         negative_response_samples = []
-
 
         for i in range(batch_size):
             indexes = list(range(batch_size))
@@ -275,7 +267,6 @@ for i in range(num_iterations):
             for l in [self.linear_1, self.linear_2]:
                 torch.nn.init.xavier_uniform_(l.weight)
 
-
         def forward(self, x: torch.Tensor) -> torch.Tensor:
             x = x + F.gelu(self.linear_1(self.norm1(x)))
             x = x + F.gelu(self.linear_2(self.norm2(x)))
@@ -295,7 +286,6 @@ for i in range(num_iterations):
             super().__init__()
             self.ff2_context = FeedForward2(feed_forward2_hidden, num_embed_hidden)
             self.ff2_reply = FeedForward2(feed_forward2_hidden, num_embed_hidden)
-
 
         def forward(self, context_emb, response_emb):
             context = self.ff2_context(context_emb.reshape(context_emb.shape[0], context_emb.shape[2]))
