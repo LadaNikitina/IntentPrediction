@@ -26,7 +26,7 @@ import torch.nn.functional as F
 import dgl.nn.pytorch as dglnn
 import torch.nn as nn
 
-sys.path.insert(1, '/cephfs/home/ledneva/focus/utils/')
+sys.path.insert(1, '/focus/utils/') # set the correct path to the utils dir
 from preprocess import Clusters, get_accuracy_k, get_all_accuracy_k
 
 num_iterations = 3
@@ -39,17 +39,17 @@ from data_function import get_data
 from GAT_functions import get_data_dgl_no_cycles
 from early_stopping_tools import LRScheduler, EarlyStopping
 
-first_num_clusters = 200
-second_num_clusters = 30
+first_num_clusters = 200 # set the number of clusters
+second_num_clusters = 30 # set the number of clusters
 
-clusters = Clusters(first_num_clusters, second_num_clusters)
-clusters.form_clusters()
-
-file = open("MP_noise_30.txt", "w")
+file = open("MP.txt", "w")
 
 for iteration in range(num_iterations):
     print(f"Iteration number {iteration}")
     file.write(f"Iteration number {iteration}\n\n")
+    
+    clusters = Clusters(first_num_clusters, second_num_clusters)
+    clusters.form_clusters()
 
     device = torch.device('cuda:0')
 
@@ -115,10 +115,6 @@ for iteration in range(num_iterations):
     hidden_dim = 512
     embs_dim = 768
     num_heads = 2
-
-
-    # In[28]:
-
 
     from dgl import nn as dgl_nn
     from torch import nn
@@ -213,10 +209,6 @@ for iteration in range(num_iterations):
         if early_stopping.early_stop:
             break
 
-
-    # In[31]:
-
-
     import matplotlib.pyplot as plt
 
     plt.figure(figsize=(12, 6))
@@ -224,10 +216,6 @@ for iteration in range(num_iterations):
     plt.plot(user_train_epoch_losses, label = "train")
     plt.plot(user_valid_epoch_losses, label = "valid")
     plt.legend()
-
-
-    # In[32]:
-
 
     user_model.eval()
     user_test_X, user_test_Y = map(list, zip(*user_test_data))
@@ -243,21 +231,12 @@ for iteration in range(num_iterations):
         user_probs_Y = torch.softmax(user_model(g), 1).tolist()
         user_probs += user_probs_Y
 
-
-    # In[33]:
-
-
     file.write("USER metric\n")
 
     file.write(f"Acc@1: {get_accuracy_k(1, clusters.test_user_df, user_probs, clusters.test_dataset, 0)}\n")
     file.write(f"Acc@3: {get_accuracy_k(3, clusters.test_user_df, user_probs, clusters.test_dataset, 0)}\n")
     file.write(f"Acc@5: {get_accuracy_k(5, clusters.test_user_df, user_probs, clusters.test_dataset, 0)}\n")
     file.write(f"Acc@10: {get_accuracy_k(10, clusters.test_user_df, user_probs, clusters.test_dataset, 0)}\n")
-
-
-    # ## 4.6 Prediction of system clusters
-
-    # In[36]:
 
     from dgl import nn as dgl_nn
     from torch import nn
@@ -305,10 +284,6 @@ for iteration in range(num_iterations):
             hg = torch.stack(h)
             return self.classify(hg)   
 
-
-    # In[37]:
-
-
     system_model = GAT_system(hidden_dim, num_heads).to(device)
 
     for param in system_model.parameters():
@@ -354,10 +329,6 @@ for iteration in range(num_iterations):
         if early_stopping.early_stop:
             break
 
-
-    # In[38]:
-
-
     system_model.eval()
     system_test_X, system_test_Y = map(list, zip(*sys_test_data))
 
@@ -372,10 +343,6 @@ for iteration in range(num_iterations):
         system_probs_Y = torch.softmax(system_model(g), 1).tolist()
         system_probs += system_probs_Y
 
-
-    # In[39]:
-
-
     file.write("SYSTEM metric\n")
 
     file.write(f"Acc@1: {get_accuracy_k(1, clusters.test_system_df, system_probs, clusters.test_dataset, 1)}\n")
@@ -383,19 +350,11 @@ for iteration in range(num_iterations):
     file.write(f"Acc@5: {get_accuracy_k(5, clusters.test_system_df, system_probs, clusters.test_dataset, 1)}\n")
     file.write(f"Acc@10: {get_accuracy_k(10, clusters.test_system_df, system_probs, clusters.test_dataset, 1)}\n")
 
-
-    # In[33]:
-
-
     file.write("ALL metric\n")
     file.write(f"Acc@1: {get_all_accuracy_k(1, clusters.test_user_df, clusters.test_system_df, user_probs, system_probs, clusters.test_dataset)}\n")
     file.write(f"Acc@3: {get_all_accuracy_k(3, clusters.test_user_df, clusters.test_system_df, user_probs, system_probs, clusters.test_dataset)}\n")
     file.write(f"Acc@5: {get_all_accuracy_k(5, clusters.test_user_df, clusters.test_system_df, user_probs, system_probs, clusters.test_dataset)}\n")
     file.write(f"Acc@10: {get_all_accuracy_k(10, clusters.test_user_df, clusters.test_system_df, user_probs, system_probs, clusters.test_dataset)}\n")
-
-
-    # In[ ]:
-#     del clusters
     
     del user_train_x, user_train_y, sys_train_x, sys_train_y
     del user_test_x, user_test_y, sys_test_x, sys_test_y
