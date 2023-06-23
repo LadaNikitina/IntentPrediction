@@ -11,7 +11,7 @@ import torch
 import sys
 import os
 
-from wooden_functions_all_uttr_embs import get_features, get_data
+from wooden_functions import get_features, get_data
 sys.path.insert(1, '/multiwoz/utils/') # set the correct path to the utils dir
 from preprocess import Clusters, get_accuracy_k, get_all_accuracy_k
 
