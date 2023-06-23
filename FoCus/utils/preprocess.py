@@ -53,9 +53,9 @@ class Clusters:
         '''
             data loading
         '''
-        with open("/cephfs/home/ledneva/focus/utils/train_focus.json", "r") as read_file:
+        with open("/focus/utils/train_focus.json", "r") as read_file: # set the correct path to the data
             train_data = json.load(read_file)
-        with open("/cephfs/home/ledneva/focus/utils/valid_focus.json", "r") as read_file:
+        with open("/focus/utils/valid_focus.json", "r") as read_file: # set the correct path to the data
             test_data = json.load(read_file)
 
         self.train_dataset = []
@@ -102,7 +102,7 @@ class Clusters:
         '''
             loading pre-calculated embeddings
         '''
-        embeddings = np.loadtxt("/cephfs/home/ledneva/focus/utils/distil_roberta_embeddings.txt")
+        embeddings = np.loadtxt("/focus/utils/distil_roberta_embeddings.txt") # set the correct path to the preprocessed embeddings
 
         self.embs_dim = embeddings.shape[1]
         # train user/system embeddings
