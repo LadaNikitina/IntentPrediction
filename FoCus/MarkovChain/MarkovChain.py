@@ -1,21 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# # Dialogue Graph Auto Construction based on data with a regular structure
-# 
-
-# Goal: Extract regular structures from the data by building a dialogue graph
-#     
-# Tasks: 
-# * Cluster dialog data using embeddings of pre-trained models (BERT, ConveRT, S-BERT…)
-# * Evaluate the quality of clustering using intent’s labeling of Multi-WoZ dataset 
-# * Linking clusters of dialogs using naive approaches (Estimation of Probabilities by Frequency Models)
-# * Try other approaches (Deep Neural Networks) for linking clusters and improve the naive approach
-# 
-
-# In[1]:
-
-
 from datasets import load_dataset
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
@@ -43,37 +25,19 @@ import torch.nn.functional as F
 import dgl.nn.pytorch as dglnn
 import torch.nn as nn
 
-
-# In[2]:
-
-
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"]="0"
 print(torch.cuda.device_count())
 
-
-# In[4]:
-
-# In[5]:
-
-
-first_num_clusters = 200
-second_num_clusters = 30
-
-
-# In[6]:
-
+first_num_clusters = 200 # set the number of clusters
+second_num_clusters = 30  # set the number of clusters
 
 import sys
-sys.path.insert(1, '/cephfs/home/ledneva/focus/utils/')
-
-
-# In[19]:
-
+sys.path.insert(1, '/focus/utils/') # set the correct path to the utils dir
 
 from preprocess import Clusters, get_accuracy_k, get_all_accuracy_k
 
-file = open("MarkovChain_30.txt", "w")
+file = open("MarkovChain.txt", "w")
 
 def create_graph(num_nodes, train_user_data, train_system_data, 
               test_user_data, test_system_data, 
@@ -147,11 +111,7 @@ def create_graph(num_nodes, train_user_data, train_system_data,
     file.write(f"Acc@3: {get_accuracy_k(3, clusters.test_system_df, sys_test, clusters.test_dataset, 1)}\n")
     file.write(f"Acc@5: {get_accuracy_k(5, clusters.test_system_df, sys_test, clusters.test_dataset, 1)}\n")
     file.write(f"Acc@10: {get_accuracy_k(10, clusters.test_system_df, sys_test, clusters.test_dataset, 1)}\n")
-
-
-        # In[33]:
-
-
+                
     file.write("ALL metric\n")
     file.write(f"Acc@1: {get_all_accuracy_k(1, clusters.test_user_df, clusters.test_system_df, user_test, sys_test, clusters.test_dataset)}\n")
     file.write(f"Acc@3: {get_all_accuracy_k(3, clusters.test_user_df, clusters.test_system_df, user_test, sys_test, clusters.test_dataset)}\n")
@@ -161,8 +121,6 @@ def create_graph(num_nodes, train_user_data, train_system_data,
     
 num_iters = 3
 for i in range(num_iters):
-    # In[7]:
-
     clusters = Clusters(first_num_clusters, second_num_clusters)
     clusters.form_clusters()
 
@@ -173,10 +131,3 @@ for i in range(num_iters):
               clusters.test_system_df,
               clusters.train_dataset,
               clusters.test_dataset)
-
-
-# In[ ]:
-
-
-
-
