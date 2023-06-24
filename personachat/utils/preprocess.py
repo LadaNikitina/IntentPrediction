@@ -41,17 +41,17 @@ class Clusters:
         self.train_dataset = [train_history[i] for i, conv_id in enumerate(train_conv_id) \
                               if i + 1 != len(train_conv_id) and conv_id != train_conv_id[i + 1]] 
 
-        # validation data
-        validation_data = dataset['validation'] 
-        validation_history = validation_data['history']
-        validation_conv_id = validation_data['conv_id']
-        self.valid_dataset = [validation_history[i] for i, conv_id in enumerate(validation_conv_id) \
-                                   if i + 1 != len(validation_conv_id) and conv_id != validation_conv_id[i + 1]] 
-
-
         # test data
-        self.test_dataset = self.train_dataset[-len(self.valid_dataset) : ]
-        self.train_dataset = self.train_dataset[ : -len(self.valid_dataset)]
+        test_data = dataset['validation'] 
+        test_history = test_data['history']
+        test_conv_id = test_data['conv_id']
+        self.test_dataset = [test_history[i] for i, conv_id in enumerate(test_conv_id) \
+                         if i + 1 != len(test_conv_id) and conv_id != test_conv_id[i + 1]] 
+        
+        
+        # validation data
+        self.valid_dataset = train_dataset[-len(self.test_dataset) : ]
+        self.train_dataset = self.train_dataset[ : -len(self.test_dataset)]
         
         self.train_df = pd.DataFrame()
         self.test_df = pd.DataFrame()
@@ -62,14 +62,14 @@ class Clusters:
         self.valid_df['sentences'] = list(itertools.chain.from_iterable(self.valid_dataset))
         
         self.train_index = self.train_df.index
-        self.test_index = self.test_df.index + len(self.train_df)
-        self.valid_index = self.valid_df.index + len(self.train_df) + len(self.test_df)
+        self.valid_index = self.valid_df.index + len(self.train_df)
+        self.test_index = self.test_df.index + len(self.train_df) + len(self.valid_df)
 
     def get_embeddings(self):
         '''
             loading pre-calculated embeddings
         '''
-        embeddings = np.loadtxt("/cephfs/home/ledneva/personachat/utils/distil_roberta_embeddings.txt")
+        embeddings = np.loadtxt("/personachat/utils/distil_roberta_embeddings.txt") # set the correct path to the embeddings
         self.train_embs = embeddings[self.train_index]
         self.test_embs = embeddings[self.test_index]
         self.valid_embs = embeddings[self.valid_index]
