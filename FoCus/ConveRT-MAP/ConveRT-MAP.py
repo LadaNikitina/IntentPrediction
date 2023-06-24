@@ -21,30 +21,20 @@ import torch.nn as nn
 
 from conversational_sentence_encoder.vectorizers import SentenceEncoder
 
-
-# In[8]:
-
-
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"]="2,3,4"
 print(torch.cuda.device_count())
 
-
-# In[9]:
-
-
-first_num_clusters = 200
+first_num_clusters = 200 # set the number of clusters
 second_num_clusters = 30
-
 
 num_iterations = 3
 
-
 import sys
-sys.path.insert(1, '/cephfs/home/ledneva/focus/utils/')
+sys.path.insert(1, '/focus/utils/') # set the correct path to the utils dir
 from preprocess import Clusters, get_accuracy_k, get_all_accuracy_k
 
-file = open("ConveRT_MAP_30.txt", "w")
+file = open("ConveRT.txt", "w")
 
 for i in range(num_iterations):
     print(f"Iteration number {i}")
@@ -240,7 +230,7 @@ for i in range(num_iterations):
             indexes = list(range(batch_size))
             indexes.remove(i)
             random_responses = response_emb[random.sample(indexes, num_samples)]
-            negative_context_samples.extend([context_emb[i]] * num_samples)  # Дублируем context_emb
+            negative_context_samples.extend([context_emb[i]] * num_samples)
             negative_response_samples.extend(random_responses)
 
         negative_context_samples = torch.stack(negative_context_samples)
