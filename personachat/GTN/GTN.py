@@ -28,7 +28,7 @@ os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"]="7,8"
 print(torch.cuda.device_count())
 
-sys.path.insert(1, '/cephfs/home/ledneva/personachat/utils/')
+sys.path.insert(1, '/personachat/utils/') # set the correct path to the utils dir
 
 from data_function import get_data
 from functions_GTN import preprocessing
@@ -38,9 +38,7 @@ from model_fastgtn import FastGTNs
 from tqdm import tqdm
 
 num_iterations = 3
-
-
-file = open("GTN_distilroberta_30.txt", "w")
+file = open("GTN.txt", "w")
 
 first_num_clusters = 200
 second_num_clusters = 30
@@ -121,10 +119,6 @@ for iteration in range(num_iterations):
     args = GTN_arguments()
     args.num_nodes = train_node_embs[0].shape[0]
 
-
-    # In[20]:
-
-
     model = FastGTNs(num_edge_type = 3,
                      w_in = train_node_embs[0].shape[1],
                      num_class = second_num_clusters,
@@ -134,18 +128,10 @@ for iteration in range(num_iterations):
     model.to(device)
     loss = nn.CrossEntropyLoss()
 
-
-    # In[21]:
-
-
     from torch.optim.lr_scheduler import ReduceLROnPlateau
     optimizer = torch.optim.Adam(model.parameters(), lr = args.lr)
     lr_scheduler = LRScheduler(optimizer)
     early_stopping = EarlyStopping()
-
-
-    # In[22]:
-
 
     train_num_batches = len(train_matrices)
     valid_num_batches = len(valid_matrices)
@@ -167,7 +153,6 @@ for iteration in range(num_iterations):
                 train_loss = loss(y_train[y_true != -1], y_true[y_true != -1])
             else:
                 train_loss = loss(y_train, y_true)
-            # тут считать лосс, выкинуть фейки
 
             train_loss.backward()
             optimizer.step()
@@ -188,7 +173,6 @@ for iteration in range(num_iterations):
                 else:
                     valid_loss = loss(y_valid, y_true)
 
-                # тут считать лосс, выкинуть фейки
                 valid_epoch_loss += valid_loss.detach().item()
 
             valid_epoch_loss /= valid_num_batches
