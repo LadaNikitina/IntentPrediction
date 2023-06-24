@@ -26,13 +26,10 @@ import torch.nn.functional as F
 import dgl.nn.pytorch as dglnn
 import torch.nn as nn
 
-sys.path.insert(1, '/cephfs/home/ledneva/personachat/utils/')
+sys.path.insert(1, '/personachat/utils/') # set the correct path to the utils dir
 from preprocess import Clusters, get_accuracy_k
 
 num_iterations = 3
-
-# In[2]:
-
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"]="7,8"
@@ -46,12 +43,10 @@ from early_stopping_tools import LRScheduler, EarlyStopping
 first_num_clusters = 200
 second_num_clusters = 30
 
-#     embs_path = "/cephfs/home/ledneva/personachat/utils/distil_roberta_embeddings.txt"
 clusters = Clusters(first_num_clusters, second_num_clusters)
 clusters.form_clusters()
-# In[5]:
 
-file = open("MP_noise_30.txt", "w")
+file = open("MP.txt", "w")
 
 for iteration in range(num_iterations):
     print(f"Iteration number {iteration}")
@@ -97,10 +92,6 @@ for iteration in range(num_iterations):
     learn_emb = torch.Tensor(nn.init.xavier_uniform_(learn_emb))
 
     null_cluster_centre_emb = np.zeros(centre_embs_dim)
-
-    # In[24]:
-
-
     centre_mass = torch.Tensor(np.concatenate([clusters.cluster_embs, 
                                                [null_cluster_centre_emb]])).to(device)
     
@@ -158,10 +149,6 @@ for iteration in range(num_iterations):
             h = list(map(get_sum, h))
             hg = torch.stack(h)
             return self.classify(hg)   
-
-
-    # In[30]:
-
 
     model = GAT(hidden_dim, num_heads).to(device)
     train_epoch_losses = []
@@ -230,9 +217,6 @@ for iteration in range(num_iterations):
     file.write(f"Acc@5: {get_accuracy_k(5, clusters.cluster_test_df, probs, clusters.test_dataset)}\n")
     file.write(f"Acc@10: {get_accuracy_k(10, clusters.cluster_test_df, probs, clusters.test_dataset)}\n")
 
-    # In[ ]:
-#     del clusters
-    
     del train_x, train_y
     del test_x, test_y
     del valid_x, valid_y
