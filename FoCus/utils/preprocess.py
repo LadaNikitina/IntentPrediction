@@ -102,7 +102,7 @@ class Clusters:
         '''
             loading pre-calculated embeddings
         '''
-        embeddings = np.loadtxt("/cephfs/home/ledneva/focus/utils/distil_roberta_embeddings.txt")
+        embeddings = np.loadtxt("/focus/utils/distil_roberta_embeddings.txt") # set correct path to the embeddings
 
         self.embs_dim = embeddings.shape[1]
         # train user/system embeddings
