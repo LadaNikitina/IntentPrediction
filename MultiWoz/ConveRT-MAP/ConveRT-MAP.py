@@ -306,7 +306,7 @@ for i in range(num_iterations):
         def encode_reply(self, x):
             return self.ff2_reply(x)
 
-    model = ConveRT_MAP(512, 1024)
+    model = ConveRT_MAP(512, 512)
     optimizer = torch.optim.AdamW(model.parameters(), lr=0.001)
 
 
