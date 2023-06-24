@@ -53,9 +53,9 @@ class Clusters:
         '''
             data loading
         '''
-        with open("/focus/utils/train_focus.json", "r") as read_file: # set the correct path to the data
+        with open("/cephfs/home/ledneva/focus/utils/train_focus.json", "r") as read_file:
             train_data = json.load(read_file)
-        with open("/focus/utils/valid_focus.json", "r") as read_file: # set the correct path to the data
+        with open("/cephfs/home/ledneva/focus/utils/valid_focus.json", "r") as read_file:
             test_data = json.load(read_file)
 
         self.train_dataset = []
@@ -89,20 +89,20 @@ class Clusters:
         
         # get user/system train/test/valid indexes for getting embeddings
         self.user_train_index = train_df[train_df["speaker"] == 0].index
-        self.user_test_index = test_df[test_df["speaker"] == 0].index + len(train_df)
-        self.user_valid_index = valid_df[valid_df["speaker"] == 0].index \
-                                + len(train_df) + len(test_df)
+        self.user_valid_index = valid_df[valid_df["speaker"] == 0].index + len(train_df)
+        self.user_test_index = test_df[test_df["speaker"] == 0].index \
+                                + len(train_df) + len(valid_df)
         
         self.system_train_index = train_df[train_df["speaker"] == 1].index
-        self.system_test_index = test_df[test_df["speaker"] == 1].index + len(train_df)
-        self.system_valid_index = valid_df[valid_df["speaker"] == 1].index \
-                                  + len(train_df) + len(test_df)
+        self.system_valid_index = valid_df[valid_df["speaker"] == 1].index + len(train_df)
+        self.system_test_index = test_df[test_df["speaker"] == 1].index \
+                                  + len(train_df) + len(valid_df)
 
     def get_embeddings(self):
         '''
             loading pre-calculated embeddings
         '''
-        embeddings = np.loadtxt("/focus/utils/distil_roberta_embeddings.txt") # set the correct path to the preprocessed embeddings
+        embeddings = np.loadtxt("/cephfs/home/ledneva/focus/utils/distil_roberta_embeddings.txt")
 
         self.embs_dim = embeddings.shape[1]
         # train user/system embeddings
