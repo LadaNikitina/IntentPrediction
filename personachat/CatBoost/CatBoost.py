@@ -12,7 +12,7 @@ import sys
 import os
 
 from wooden_functions import get_features, get_data
-sys.path.insert(1, '/cephfs/home/ledneva/personachat/utils/')
+sys.path.insert(1, '/personachat/utils/') # set the correct path to the utils dir
 from preprocess import Clusters, get_accuracy_k
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
@@ -21,7 +21,7 @@ print(torch.cuda.device_count())
 
 num_iterations = 3
 
-file = open("Wooden_distilroberta_30.txt", "w")
+file = open("Wooden.txt", "w")
 
 for iteration in range(num_iterations):
     print(f"Iteration number {iteration}")
