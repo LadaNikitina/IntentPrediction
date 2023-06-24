@@ -53,9 +53,9 @@ class Clusters:
         '''
             data loading
         '''
-        with open("/cephfs/home/ledneva/focus/utils/train_focus.json", "r") as read_file:
+        with open("/focus/utils/train_focus.json", "r") as read_file: # set correct path to the train_focus.json
             train_data = json.load(read_file)
-        with open("/cephfs/home/ledneva/focus/utils/valid_focus.json", "r") as read_file:
+        with open("/focus/utils/valid_focus.json", "r") as read_file: # set correct path to the valid_focus.json
             test_data = json.load(read_file)
 
         self.train_dataset = []
