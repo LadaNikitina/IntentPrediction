@@ -1,21 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# # Dialogue Graph Auto Construction based on data with a regular structure
-# 
-
-# Goal: Extract regular structures from the data by building a dialogue graph
-#     
-# Tasks: 
-# * Cluster dialog data using embeddings of pre-trained models (BERT, ConveRT, S-BERT…)
-# * Evaluate the quality of clustering using intent’s labeling of Multi-WoZ dataset 
-# * Linking clusters of dialogs using naive approaches (Estimation of Probabilities by Frequency Models)
-# * Try other approaches (Deep Neural Networks) for linking clusters and improve the naive approach
-# 
-
-# In[1]:
-
-
 from datasets import load_dataset
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
@@ -43,37 +25,19 @@ import torch.nn.functional as F
 import dgl.nn.pytorch as dglnn
 import torch.nn as nn
 
-
-# In[2]:
-
-
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"]="0"
 print(torch.cuda.device_count())
 
-
-# In[4]:
-
-# In[5]:
-
-
 first_num_clusters = 200
 second_num_clusters = 30
 
-
-# In[6]:
-
-
 import sys
-sys.path.insert(1, '/cephfs/home/ledneva/personachat/utils/')
-
-
-# In[19]:
-
+sys.path.insert(1, '/personachat/utils/') # set the correct path to the utils dir
 
 from preprocess import Clusters, get_accuracy_k
 
-file = open("MarkovChain_distilroberta_30.txt", "w")
+file = open("MarkovChain.txt", "w")
 
 def create_graph(num_nodes, train_data, test_data, train_dataset, test_dataset):
     probs = np.zeros((num_nodes + 1, num_nodes))
@@ -128,10 +92,3 @@ for i in range(num_iters):
                  clusters.cluster_test_df, 
                  clusters.train_dataset,
                  clusters.test_dataset)
-
-
-# In[ ]:
-
-
-
-
