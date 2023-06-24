@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[7]:
-
-
 from datasets import load_dataset
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
@@ -41,7 +35,7 @@ first_num_clusters = 200
 second_num_clusters = 30
 
 import sys
-sys.path.insert(1, '/cephfs/home/ledneva/personachat/utils/')
+sys.path.insert(1, '/personachat/utils/') # set the correct path to the utils dir
 
 from preprocess import Clusters, get_accuracy_k
 
