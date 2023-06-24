@@ -284,7 +284,6 @@ class fastGTN(BaseModel):
     def forward(self, hg, h):
         # * =============== Extract edges in original graph ================
         self.A, self.category_idx = transform_relation_graph_list(hg,identity=self.identity)
-        # выколупать h из словарика и передавать в лоб!!!
 #         print(h[0][0])
         # X_ = self.gcn(g, self.h)
         A = self.A
@@ -369,11 +368,8 @@ class GATConv_Grad(GATConv):
             e = self.leaky_relu(graph.edata.pop('e'))
             graph.edata['a'] = self.attn_drop(edge_softmax(graph, e))
 
-            # @author haoran
-            # --- compute grad start
             graph.edata['edge_weights'] = edge_weights
             graph.update_all(fn.u_mul_e('ft', 'edge_weights', 'mul'), fn.sum('mul', 'ft'))
-            # --- compute grad end
             
             graph.update_all(fn.u_mul_e('ft', 'a', 'm'),
                              fn.sum('m', 'ft'))
