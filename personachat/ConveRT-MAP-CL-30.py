@@ -21,17 +21,9 @@ import torch.nn as nn
 
 from conversational_sentence_encoder.vectorizers import SentenceEncoder
 
-
-# In[8]:
-
-
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"]="6,7"
 print(torch.cuda.device_count())
-
-
-# In[9]:
-
 
 first_num_clusters = 200
 second_num_clusters = 30
@@ -41,10 +33,10 @@ num_iterations = 3
 
 
 import sys
-sys.path.insert(1, '/cephfs/home/ledneva/personachat/utils/')
+sys.path.insert(1, '/personachat/utils/') # set the correct path to the utils dir
 from preprocess import Clusters, get_accuracy_k
 
-file = open("ConveRT_MAP_30.txt", "w")
+file = open("ConveRT_MAP.txt", "w")
 
 for i in range(num_iterations):
     print(f"Iteration number {i}")
@@ -221,7 +213,7 @@ for i in range(num_iterations):
             indexes = list(range(batch_size))
             indexes.remove(i)
             random_responses = response_emb[random.sample(indexes, num_samples)]
-            negative_context_samples.extend([context_emb[i]] * num_samples)  # Дублируем context_emb
+            negative_context_samples.extend([context_emb[i]] * num_samples)
             negative_response_samples.extend(random_responses)
 
         negative_context_samples = torch.stack(negative_context_samples)
@@ -240,11 +232,7 @@ for i in range(num_iterations):
 
     train_negative_samples = get_negative_data(train_loader)
     valid_negative_samples = get_negative_data(valid_loader)
-
-
-    # In[55]:
-
-
+    
     from torch import nn
     from torch import linalg as LA
 
@@ -305,26 +293,8 @@ for i in range(num_iterations):
         def encode_reply(self, x):
             return self.ff2_reply(x)
 
-    model = ConveRT_MAP(512, 1024)
+    model = ConveRT_MAP(512, 512)
     optimizer = torch.optim.AdamW(model.parameters(), lr=0.001)
-
-    import random
-    def generate_negative_samples(context_emb, response_emb, num_samples):
-        batch_size = context_emb.shape[0]
-        negative_context_samples = []
-        negative_response_samples = []
-
-
-        for i in range(batch_size):
-            indexes = list(range(batch_size))
-            indexes.remove(i)
-            random_responses = response_emb[random.sample(indexes, num_samples)]
-            negative_context_samples.extend([context_emb[i]] * num_samples)  # Дублируем context_emb
-            negative_response_samples.extend(random_responses)
-
-        negative_context_samples = torch.stack(negative_context_samples)
-        negative_response_samples = torch.stack(negative_response_samples)
-        return negative_context_samples, negative_response_samples
 
     max_epochs = 20
     best_valid_loss = 100.0
@@ -371,10 +341,6 @@ for i in range(num_iterations):
 
             best_valid_loss = avg_val_loss
             print(f"Epoch {epoch} | Train Loss: {avg_train_loss} | Validation Loss: {avg_val_loss}")
-
-
-    # In[58]:
-
 
     with torch.no_grad():
         convert_train_embeddings = model.encode_reply(torch.from_numpy(train_embeddings)).cpu().numpy()
