@@ -228,7 +228,7 @@ for i in range(num_iterations):
             indexes = list(range(batch_size))
             indexes.remove(i)
             random_responses = response_emb[random.sample(indexes, num_samples)]
-            negative_context_samples.extend([context_emb[i]] * num_samples)  # Дублируем context_emb
+            negative_context_samples.extend([context_emb[i]] * num_samples)
             negative_response_samples.extend(random_responses)
 
         negative_context_samples = torch.stack(negative_context_samples)
