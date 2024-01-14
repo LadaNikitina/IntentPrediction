@@ -1,9 +1,10 @@
 # Intent Prediction
 
-Краткое описание:
-+ Адаптация графового подхода предсказания следующего интента для датасетов закрытого домена
-+ Препроцессинг датасета MultiWOZ
-+ Построение эмбеддингов датасета
-+ Двухэтапная кластеризация, построение сценарного графа на двух долях
-+ Реализация четырех базовых подходов для сравнения
-+ Реализация графовых подходов и градиентного бустинга для решения задачи предсказания интента
+Short Description:
+
++ Adaptation of a graph-based next-intent prediction approach for closed-domain datasets
++ MultiWOZ dataset preprocessing
++ Embeddings construction of the dataset
++ Two-stage clustering, scenario graph construction on two partitions
++ Implementation of four basic approaches for comparison
++ Implementation of graph-based approaches and gradient boosting to solve the intent prediction problem
